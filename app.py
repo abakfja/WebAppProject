@@ -41,6 +41,7 @@ class Event(db.Model):
     name = db.Column(db.String(20))
     date = db.Column(db.DateTime, nullable=False)
     owner_id = db.Column(db.Integer, db.ForeignKey('group.id'))
+    freq = db.Column(db.Integer,default=0)
 
 @login_manager.user_loader
 def load_user(user_id):

@@ -109,8 +109,9 @@ def dashboard():
     return render_template('dashboard.html', name=current_user.username)
 
 @app.route('/dashboard/change')
-@login_required:
-    return 
+@login_required
+def select():
+    return ""
         
 
 @app.route('/logout')

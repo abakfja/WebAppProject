@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf8">
+    <title>Calendar</title>
+    <link rel="stylesheet" type="text/css" href="css/style.css">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+</head>
+
+<body>
+    <div class="container">
+        <div class="left-panel">
+            <div class="month card card-top">
+                <div class="month--heading">
+                    <i class="material-icons arrow-prev">keyboard_arrow_left</i>
+                    <span class="month--name">December 2015</span>
+                    <i class="material-icons arrow-next">keyboard_arrow_right</i>
+                </div>
+                <div class="month--container">
+                    <div class="weekday">mon</div>
+                    <div class="weekday">tue</div>
+                    <div class="weekday">wed</div>
+                    <div class="weekday">thu</div>
+                    <div class="weekday">fri</div>
+                    <div class="weekday">sat</div>
+                    <div class="weekday">sun</div>
+
+                    <div class="day day__prev-month day__other-month"><span>29</span></div>
+                    <div class="day day__prev-month day__other-month"><span>29</span></div>
+                    <div class="day"><span>1</span></div>
+                    <div class="day"><span>2</span></div>
+                    <div class="day"><span>3</span></div>
+                    <div class="day"><span>4</span></div>
+                    <div class="day"><span>5</span></div>
+
+                    <div class="day"><span>6</span></div>
+                    <div class="day"><span>7</span></div>
+                    <div class="day"><span>8</span></div>
+                    <div class="day"><span>9</span></div>
+                    <div class="day"><span>10</span></div>
+                    <div class="day"><span>11</span></div>
+                    <div class="day"><span>12</span></div>
+
+                    <div class="day"><span>13</span></div>
+                    <div class="day"><span>14</span></div>
+                    <div class="day"><span>15</span></div>
+                    <div class="day"><span>16</span></div>
+                    <div class="day"><span>17</span></div>
+                    <div class="day"><span>18</span></div>
+                    <div class="day"><span>19</span></div>
+
+                    <div class="day"><span>20</span></div>
+                    <div class="day"><span>21</span></div>
+                    <div class="day day__selected day__has-item"><span>22</span></div>
+                    <div class="day"><span>23</span></div>
+                    <div class="day"><span>24</span></div>
+                    <div class="day"><span>25</span></div>
+                    <div class="day"><span>26</span></div>
+
+                    <div class="day"><span>27</span></div>
+                    <div class="day day__has-item"><span>28</span></div>
+                    <div class="day"><span>29</span></div>
+                    <div class="day"><span>30</span></div>
+                    <div class="day"><span>31</span></div>
+                    <div class="day day__next-month day__other-month"><span>1</span></div>
+                    <div class="day day__next-month day__other-month"><span>2</span></div>
+
+                    <div class="day day__next-month day__other-month"><span>3</span></div>
+                    <div class="day day__next-month day__other-month"><span>4</span></div>
+                    <div class="day day__next-month day__other-month"><span>5</span></div>
+                    <div class="day day__next-month day__other-month"><span>6</span></div>
+                    <div class="day day__next-month day__other-month"><span>7</span></div>
+                    <div class="day day__next-month day__other-month"><span>8</span></div>
+                    <div class="day day__next-month day__other-month"><span>9</span></div>
+                </div>
+            </div>
+            <div class="card card-middle"></div>
+            <div class="card card-bottom"></div>
+        </div>
+        <div class="right-panel">
+            <div class="todo-heading">
+                <div class="todo-day-of-week">Tuesday</div>
+                <div class="todo-date">date</div>
+            </div>
+            <div class="todo-container scroll-content">
+                <div class="todo-item">
+                    <div class="todo-bullet">
+                        <span class="bullet"></span>
+                    </div>
+                    <div class="todo-details">
+                        <div contenteditable="true" spellcheck="false" class="todo-description">Event 1</div>
+                        <div class="todo-duration">
+                            <span contenteditable="true" spellcheck="false" class="todo-duration_from">17:00 PM</span>
+                            - 
+                            <span contenteditable="true" spellcheck="false" class="todo-duration_to">17:30 PM</span></div>
+                        </div>
+                        <div class="todo-check">
+                            <i class="material-icons">done</i>
+                        </div>
+                    </div>
+                    <div class="todo-item">
+                        <div class="todo-bullet">
+                            <span class="bullet"></span>
+                        </div>
+                        <div class="todo-details">
+                            <div class="todo-description">Event 2</div>
+                            <div class="todo-duration">17:00 PM - 17:30 PM</div>
+                        </div>
+                        <div class="todo-check">
+                            <i class="material-icons">done</i>
+                        </div>
+                    </div>
+                    <div class="todo-item">
+                        <div class="todo-bullet">
+                            <span class="bullet"></span>
+                        </div>
+                        <div class="todo-details">
+                            <div class="todo-description">Event 3</div>
+                            <div class="todo-duration">17:00 PM - 17:30 PM</div>
+                        </div>
+                        <div class="todo-check">
+                            <i class="material-icons">done</i>
+                        </div>
+                    </div>
+                    <div class="todo-item">
+                        <div class="todo-bullet">
+                            <span class="bullet"></span>
+                        </div>
+                        <div class="todo-details">
+                            <div class="todo-description">Event 4</div>
+                            <div class="todo-duration">17:00 PM - 17:30 PM</div>
+                        </div>
+                        <div class="todo-check">
+                            <i class="material-icons">done</i>
+                        </div>
+                    </div>
+                    
+                </div>
+                <div class="todo-footer">
+                    <i class="material-icons">add_circle_outline</i>
+                </div>
+            </div>
+        </div>
+        <script src="js/jquery-3.2.1.min.js"></script>
+        <script src="moment/moment.min.js"></script>
+        <script src="js/EventBus.js"></script>
+        <script src="js/Utils.js"></script>
+        <script src="js/CalendarGenerator.js"></script>
+        <script src="js/CalendarPage.js"></script>
+        <script>
+            let content = $(".todo-container")[0];
+            const cal = new CalendarPage();
+        </script>
+    </body>
+
+    </html>

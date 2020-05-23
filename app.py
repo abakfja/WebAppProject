@@ -19,9 +19,9 @@ login_manager.init_app(app)
 login_manager.login_view = 'login'
 
 groups = db.Table('groups',
-    db.Column('group_id', db.Integer, db.ForeignKey('group.id'), primary_key=True),
-    db.Column('user_id', db.Integer, db.ForeignKey('user.id'), primary_key=True)
-)
+        db.Column('group_id', db.Integer, db.ForeignKey('group.id'), primary_key=True),
+        db.Column('user_id', db.Integer, db.ForeignKey('user.id'), primary_key=True)
+        )
 
 class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -29,8 +29,8 @@ class User(UserMixin, db.Model):
     email = db.Column(db.String(50), unique=True)
     password = db.Column(db.String(80))
     groups = db.relationship('Group', secondary=groups, lazy='subquery',
-        backref=db.backref('users', lazy=True))
-   
+            backref=db.backref('users', lazy=True))
+
 class Group(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(15), unique=True)
@@ -86,7 +86,7 @@ def login():
 
         flash("Invalid username or Password", 'error')
         return redirect(url_for('login'))
-        #return '<h1>' + form.username.data + ' ' + form.password.data + '</h1>'
+    #return '<h1>' + form.username.data + ' ' + form.password.data + '</h1>'
 
     return render_template('login.html', form=form)
 
@@ -107,15 +107,26 @@ def signup():
 @app.route('/dashboard')
 @login_required
 def dashboard():
-    return render_template('dashboard.html', name=current_user.username)
+    return render_template('dashboard.html', login_user=current_user)
 
-@app.route('/change')
+@app.route('/change', methods=['GET', 'POST'])
 @login_required
 def select():
     all_groups = Group.query.all()
-    for club in all_groups:
-        print(club.name,club.About)
-    return render_template('change.html', name=current_user.username)
+    if request.method == 'POST':
+        for current_group in all_groups:
+            if current_group.name in request.form:
+                if current_group not in current_user.groups:
+                    current_user.groups.append(current_group)
+            else:
+                if current_group in current_user.groups:
+                    current_user.groups.remove(current_group)
+        db.session.add(current_user)
+        db.session.commit()
+        print(current_user.groups)
+
+    return render_template('change.html', name=current_user.username, 
+            login_user=current_user, available=all_groups)
 
 @app.route('/logout')
 @login_required

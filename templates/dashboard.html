@@ -9,7 +9,8 @@ Dashboard
 <link rel="stylesheet" href="{{url_for('.static', filename='dashboard.css')}}">
 <!-- <link rel="stylesheet" type="text/css" href="{{ url_for('.static', filename='style.css') }}"> -->
 <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
-<script src="//ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
 <!-- Latest compiled JavaScript -->
 <script src="{{bootstrap_find_resource('js/bootstrap.min.js', cdn='bootstrap')}}"></script>
 {% endblock %}
@@ -29,13 +30,10 @@ Dashboard
         <div id="navbar" class="navbar-collapse collapse">
             <ul class="nav navbar-nav navbar-right">
                 <li><a href="dashboard">Dashboard</a></li>
-                <li><a href="#">Settings</a></li>
+                <li><a href="change">Change</a></li>
                 <li><a href="#">Profile</a></li>
                 <li><a href="{{ url_for('logout') }}">Log Out</a></li>
             </ul>
-            <form class="navbar-form navbar-right">
-                <input type="text" class="form-control" placeholder="Search...">
-            </form>
         </div>
     </div>
 </nav>
@@ -46,20 +44,27 @@ Dashboard
             <ul class="nav nav-sidebar">
                 <li class="active"><a href="#">Overview <span class="sr-only">(current)</span></a></li>
                 <li><a href="#">Events</a></li>
-                <li><a href="#">Groups</a></li>
+                <li><a data-toggle="collapse" href="#collapse1" aria-expanded="false" aria-controls="collapse1">Groups</a></li>
+                <div id="collapse1" class="panel-collapse collapse multi-collapse">
+                    <ul class="list-group">
+                        {% for group in login_user.groups %}
+                        <li class="list-group-item">{{ group.name }}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
                 <li><a href="#">Official</a></li>
             </ul>
             <!--TODO Expand Groups to this navbar -->
-            <ul class="nav nav-sidebar">
+            <!-- <ul class="nav nav-sidebar">
                 <li><a href="">extra 1</a></li>
                 <li><a href="">extra 2</a></li>
                 <li><a href="">extra 3</a></li>
                 <li><a href="">extra 4</a></li>
                 <li><a href="">extra 5</a></li>
-            </ul>
+            </ul> -->
         </div>
         <div class="col-sm-9 col-sm-offset-3 col-md-10 col-md-offset-2 main">
-            <h1 class="page-header">Welcome, {{ name }}</h1>
+            <h1 class="page-header">Welcome, {{ login_user.username }}</h1>
             <div class="container block-center" id="tags">
                 <div class="welcome">
                     <h1></h1>

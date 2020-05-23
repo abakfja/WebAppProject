@@ -34,6 +34,7 @@ class User(UserMixin, db.Model):
 class Group(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(15), unique=True)
+    About = db.Column(db.String(80), unique=True)
     events = db.relationship('Event', backref='owner')
 
 class Event(db.Model):
@@ -108,10 +109,13 @@ def signup():
 def dashboard():
     return render_template('dashboard.html', name=current_user.username)
 
-@app.route('/dashboard/change')
+@app.route('/change')
 @login_required
 def select():
-    return ""
+    all_groups = Group.query.all()
+    for club in all_groups:
+        print(club.name,club.About)
+    return render_template('change.html', name=current_user.username)
 
 @app.route('/logout')
 @login_required

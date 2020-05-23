@@ -7,6 +7,11 @@ Dashboard
 {% block styles %}
 {{super()}}
 <link rel="stylesheet" href="{{url_for('.static', filename='dashboard.css')}}">
+<!-- <link rel="stylesheet" type="text/css" href="{{ url_for('.static', filename='style.css') }}"> -->
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+<script src="//ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <!-- Latest compiled JavaScript -->
+    <script src="{{bootstrap_find_resource('js/bootstrap.min.js', cdn='bootstrap')}}"></script>
 {% endblock %}
 
 {% block content %}
@@ -55,7 +60,70 @@ Dashboard
         </div>
         <div class="col-sm-9 col-sm-offset-3 col-md-10 col-md-offset-2 main">
             <h1 class="page-header">Welcome, {{ name }}</h1>
+               <div class="container block-center" id="tags">
+        <div class="welcome">
+            <h1></h1>
+            <h2 class="lead">This is your Dashboard - Testing Purpose</h2>
         </div>
+        {% block flashes %}
+            {% with messages = get_flashed_messages(category_filter = ["error"]) %}
+                {% if messages %}
+                    <ul class="flashes center-block" style="width:80%">
+                    {% for message in messages %}
+                    <h2 align = "center" class="alert alert-danger mb-3" role = "alert">{{ message }}</h1>
+                    {% endfor %}
+                    </ul>
+                {% endif %}
+            {% endwith %}
+
+            {% with messages = get_flashed_messages(category_filter = ["success"]) %}
+                {% if messages %}
+                    <ul class="flashes center-block" style="width:80%">
+                    {% for message in messages %}
+                    <h2 align = "center" class="alert alert-success mb-3" role = "alert">{{ message }}</h1>
+                    {% endfor %}
+                    </ul>
+                {% endif %}
+            {% endwith %}
+        {% endblock flashes %}
+        <table class="table table-bordered">
+
+            <thead>
+                <tr>
+                    <th>Club</th>
+                    <th>Required ?</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Regular classes</td>
+                    <td><input type="checkbox" id="1" name="reg" value="regular"></td>
+                </tr>
+                <tr>
+                    <td>Programming Club</td>
+                    <td><input type="checkbox" id="2" name="prog" value="programming"></td>
+                </tr>
+                <tr>
+                    <td>Dance Club</td>
+                    <td><input type="checkbox" id="3" name="dance" value="dance"></td>
+                </tr>
+                <tr>
+                    <td>FHC Club</td>
+                    <td><input type="checkbox" id="4" name="fhc" value="fhc"></td>
+                </tr>
+                <tr>
+                    <td>Art Club</td>
+                    <td><input type="checkbox" id="5" name="art" value="art"></td>
+                </tr>
+                <tr>
+                    <td>Debate Club</td>
+                    <td><input type="checkbox" id="6" name="deb" value="debate"></td>
+                </tr>
+            </tbody>
+        </table>
+        <button type="button" class="btn btn-success" id="done">Confirm</button>    
+    </div>
+         </div>   
     </div>
 </div>
 {% endblock %}

@@ -109,6 +109,11 @@ def signup():
 def dashboard():
     return render_template('dashboard.html', name=current_user.username)
 
+@app.route('/calendar')
+@login_required
+def calendar():
+    return render_template('calendar.html', name=current_user.username)
+
 @app.route('/dashboard/change')
 @login_required
 def select():

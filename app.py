@@ -1,4 +1,4 @@
-from flask import Flask, render_template, redirect, url_for, flash, request
+from flask import Flask, render_template, redirect, url_for, flash, request, jsonify
 from flask_bootstrap import Bootstrap
 from flask_wtf import FlaskForm
 from wtforms import StringField, PasswordField, BooleanField, TextAreaField, SelectField
@@ -252,17 +252,23 @@ def signup():
     return render_template('signup.html', form=form)
 
 
-@app.route('/calendar', endpoint='calendar')
+@app.route('/calendar', endpoint='calendar', methods=["GET", "POST"])
 @login_required(role="User")
 def calendar():
-    all_groups = Group.query.with_parent(current_user).all()
+    print(request.__dict__.keys())
+    if request.method == "POST":
+        date_clk = request.form['data']
+    else:
+        date_clk = datetime.datetime.now().date()
+    print(type(date_clk))
+    new_date = datetime.datetime.strptime(str(date_clk).strip('"'),'%Y-%m-%d').date()
+    all_groups = current_user.groups
     all_events = []
-    print(datetime.datetime.now().date)
     for ev in all_groups:
-        all_events += Event.query.filter_by(owner_id=ev.id,
-                                            date=datetime.datetime.now().date()).all()
-    return render_template('calendar.html', events=all_events)
-
+        print(ev.name)
+        all_events += Event.query.filter_by(owner_id = ev.id, date = date_clk).all()
+    print(all_events)
+    return render_template('calendar.html', events = all_events)
 
 @app.route('/dashboard', endpoint='dashboard')
 @login_required(role="User")

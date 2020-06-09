@@ -1,15 +1,16 @@
-from flask import Flask, render_template, redirect, url_for, flash, request, jsonify
+import datetime
+import os
+from functools import wraps
+
+from flask import Flask, render_template, redirect, url_for, flash, request
 from flask_bootstrap import Bootstrap
+from flask_login import LoginManager, UserMixin, login_user, logout_user, current_user
+from flask_sqlalchemy import SQLAlchemy
 from flask_wtf import FlaskForm
+from werkzeug.security import generate_password_hash, check_password_hash
 from wtforms import StringField, PasswordField, BooleanField, TextAreaField, SelectField
 from wtforms.fields.html5 import DateField, TimeField
 from wtforms.validators import InputRequired, Email, Length, EqualTo, ValidationError
-from flask_sqlalchemy import SQLAlchemy
-from werkzeug.security import generate_password_hash, check_password_hash
-from functools import wraps
-import os
-import datetime
-from flask_login import LoginManager, UserMixin, login_required, login_user, logout_user, current_user
 
 app = Flask(__name__)
 
@@ -27,10 +28,8 @@ login_manager.init_app(app)
 login_manager.login_view = 'login'
 
 groups = db.Table('groups',
-                  db.Column('group_id', db.Integer, db.ForeignKey('group.id'),
-                            primary_key=True),
-                  db.Column('user_id', db.Integer, db.ForeignKey('user.id'),
-                            primary_key=True)
+                  db.Column('group_id', db.Integer, db.ForeignKey('group.id'), primary_key=True),
+                  db.Column('user_id', db.Integer, db.ForeignKey('user.id'), primary_key=True)
                   )
 
 
@@ -130,7 +129,7 @@ class AddGroupForm(FlaskForm):
         InputRequired(), Length(min=8, max=80)])
     password2 = PasswordField('Confirm Password', validators=[InputRequired(
     ), EqualTo('password', message='Must be equal to above Password')])
-      
+
     def validate_username(self, username):
         user = User.query.filter_by(username=username.data).first()
         if user is not None:
@@ -238,17 +237,14 @@ def login():
 @app.route('/signup', methods=['GET', 'POST'], endpoint='signup')
 def signup():
     form = RegisterForm()
-
     if form.validate_on_submit():
         hashed_password = generate_password_hash(
             form.password.data, method='sha256')
-        new_user = User(username=form.username.data,
-                        email=form.email.data, password=hashed_password)
+        new_user = User(username=form.username.data, email=form.email.data, password=hashed_password)
         db.session.add(new_user)
         db.session.commit()
         flash('Succesfully Registered', 'success')
         return redirect(url_for('login'))
-
     return render_template('signup.html', form=form)
 
 
@@ -261,14 +257,15 @@ def calendar():
     else:
         date_clk = datetime.datetime.now().date()
     print(type(date_clk))
-    new_date = datetime.datetime.strptime(str(date_clk).strip('"'),'%Y-%m-%d').date()
+    new_date = datetime.datetime.strptime(str(date_clk).strip('"'), '%Y-%m-%d').date()
     all_groups = current_user.groups
     all_events = []
     for ev in all_groups:
         print(ev.name)
-        all_events += Event.query.filter_by(owner_id = ev.id, date = date_clk).all()
+        all_events += Event.query.filter_by(owner_id=ev.id, date=date_clk).all()
     print(all_events)
-    return render_template('calendar.html', events = all_events)
+    return render_template('calendar.html', events=all_events)
+
 
 @app.route('/dashboard', endpoint='dashboard')
 @login_required(role="User")

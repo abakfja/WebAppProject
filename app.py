@@ -11,6 +11,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from wtforms import StringField, PasswordField, BooleanField, TextAreaField, SelectField
 from wtforms.fields.html5 import DateField, TimeField
 from wtforms.validators import InputRequired, Email, Length, EqualTo, ValidationError
+from itsdangerous import TimedJSONWebSignatureSerializer as Serializer
 
 app = Flask(__name__)
 
@@ -41,7 +42,8 @@ class User(db.Model, UserMixin):
     groups = db.relationship('Group', secondary=groups, lazy='subquery',
                              backref=db.backref('users', lazy=True))
     urole = db.Column(db.String, default="User")
-    group_under = db.relationship('Group', backref='admin-user', uselist=False)
+    groups_under = db.relationship('Group', backref='admin-user', uselist=False)
+
 
 
 class Group(db.Model):

@@ -102,8 +102,8 @@ class RegisterForm(FlaskForm):
         InputRequired(), Length(min=4, max=15)])
     password = PasswordField('Password', validators=[
         InputRequired(), Length(min=8, max=80)])
-    password2 = PasswordField('Confirm Password', validators=[InputRequired(
-    ), EqualTo('password', message='Must be equal to above Password')])
+    password2 = PasswordField('Confirm Password', validators=[InputRequired(),
+        EqualTo('password', message='Must be equal to above Password')])
 
     def validate_username(self, username):
         user = User.query.filter_by(username=username.data).first()
@@ -120,15 +120,15 @@ class AddGroupForm(FlaskForm):
     name = StringField('Name', validators=[
         InputRequired(), Length(min=4, max=50)])
     about = StringField('About', validators=[InputRequired(), Length(min=4)])
-    decript = StringField('Description', validators=[])
-    email = StringField('Email', validators=[InputRequired(), Email(
-        message='Invalid email'), Length(max=50)])
+    descript = StringField('Description', validators=[])
+    email = StringField('Email', validators=[InputRequired(),
+        Email(message='Invalid email'), Length(max=50)])
     username = StringField('Username', validators=[
         InputRequired(), Length(min=4, max=15)])
     password = PasswordField('Password', validators=[
         InputRequired(), Length(min=8, max=80)])
-    password2 = PasswordField('Confirm Password', validators=[InputRequired(
-    ), EqualTo('password', message='Must be equal to above Password')])
+    password2 = PasswordField('Confirm Password', validators=[InputRequired(),
+        EqualTo('password', message='Must be equal to above Password')])
 
     def validate_username(self, username):
         user = User.query.filter_by(username=username.data).first()
@@ -169,7 +169,7 @@ def addgroup():
         db.session.add(new_user)
         db.session.commit()
         new_group = Group(name=form.name.data, about=form.about.data,
-                          desc=form.decript.data, admin_id=new_user.id)
+                          desc=form.descript.data, admin_id=new_user.id)
         new_user.group_under = new_group
         db.session.add(new_group)
         db.session.commit()
@@ -203,11 +203,11 @@ def addevent():
     form = AddEventForm()
 
     if form.validate_on_submit():
-        new_event = Event(name=form.name.data, 
+        new_event = Event(name=form.name.data,
                           date=form.date.data,
                           start_time=form.start_time.data,
-                          end_time=form.end_time.data, 
-                          about=form.about.data, 
+                          end_time=form.end_time.data,
+                          about=form.about.data,
                           owner_id=current_user.group_under.id,
                           freq=form.freq.data
                          )
@@ -234,8 +234,6 @@ def login():
                 return redirect(url_for('dashboard'))
         flash("Invalid username or Password", 'error')
         return redirect(url_for('login'))
-    # return '<h1>' + form.username.data + ' ' + form.password.data + '</h1>'
-
     return render_template('login.html', form=form)
 
 

@@ -83,9 +83,7 @@ def login_required(role="ANY"):
             if ((current_user.urole != role) and (role != "ANY")):
                 return login_manager.unauthorized()
             return fn(*args, **kwargs)
-
         return decorated_view
-
     return wrapper
 
 
@@ -205,9 +203,14 @@ def addevent():
     form = AddEventForm()
 
     if form.validate_on_submit():
-        new_event = Event(name=form.name.data, date=form.date.data, start_time=form.start_time.data,
-                          end_time=form.end_time.data, about=form.about.data, owner_id=current_user.group_under.id,
-                          freq=form.freq.data)
+        new_event = Event(name=form.name.data, 
+                          date=form.date.data,
+                          start_time=form.start_time.data,
+                          end_time=form.end_time.data, 
+                          about=form.about.data, 
+                          owner_id=current_user.group_under.id,
+                          freq=form.freq.data
+                         )
         print(new_event.date)
         db.session.add(new_event)
         db.session.commit()

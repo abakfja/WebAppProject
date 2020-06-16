@@ -2,16 +2,20 @@ import datetime
 import os
 from functools import wraps
 
-from flask import Flask, render_template, redirect, url_for, flash, request
+from flask import Flask, flash, redirect, render_template, request, url_for
 from flask_bootstrap import Bootstrap
-from flask_login import LoginManager, UserMixin, login_user, logout_user, current_user
+from flask_login import (
+    LoginManager, UserMixin, current_user, login_required, login_user,
+    logout_user)
 from flask_sqlalchemy import SQLAlchemy
 from flask_wtf import FlaskForm
-from werkzeug.security import generate_password_hash, check_password_hash
-from wtforms import StringField, PasswordField, BooleanField, TextAreaField, SelectField
-from wtforms.fields.html5 import DateField, TimeField
-from wtforms.validators import InputRequired, Email, Length, EqualTo, ValidationError
 from itsdangerous import TimedJSONWebSignatureSerializer as Serializer
+from werkzeug.security import check_password_hash, generate_password_hash
+from wtforms import (BooleanField, PasswordField, SelectField, StringField,
+                     TextAreaField)
+from wtforms.fields.html5 import DateField, TimeField
+from wtforms.validators import (Email, EqualTo, InputRequired, Length,
+                                ValidationError)
 
 app = Flask(__name__)
 
@@ -26,11 +30,21 @@ db = SQLAlchemy(app)
 login_manager = LoginManager()
 bootstrap = Bootstrap(app)
 login_manager.init_app(app)
-login_manager.login_view = 'login'
+#  login_manager.login_view = 'login'
+
 
 groups = db.Table('groups',
-                  db.Column('group_id', db.Integer, db.ForeignKey('group.id'), primary_key=True),
-                  db.Column('user_id', db.Integer, db.ForeignKey('user.id'), primary_key=True)
+                  db.Column('group_id', db.Integer, db.ForeignKey(
+                      'group.id'), primary_key=True),
+                  db.Column('user_id', db.Integer, db.ForeignKey(
+                      'user.id'), primary_key=True)
+                  )
+
+admins = db.Table('admins',
+                  db.Column('group_id', db.Integer, db.ForeignKey(
+                      'group.id'), primary_key=True),
+                  db.Column('user_id', db.Integer, db.ForeignKey(
+                      'user.id'), primary_key=True)
                   )
 
 
@@ -41,21 +55,16 @@ class User(db.Model, UserMixin):
     password = db.Column(db.String(80))
     groups = db.relationship('Group', secondary=groups, lazy='subquery',
                              backref=db.backref('users', lazy=True))
-    urole = db.Column(db.String, default="User")
-    groups_under = db.relationship('Group', backref='admin-user', uselist=False)
-
+    groups_under = db.relationship('Group', secondary=admins, lazy='subquery',
+                                   backref=db.backref('admins', lazy=True))
 
 
 class Group(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(40), unique=True, nullable=False)
     about = db.Column(db.String(80), nullable=False)
-    desc = db.Column(db.String(100))
-    #  group_username = db.Column(db.String(15))
-    #  admin_email = db.Column(db.String(50))
-    #  admin_password = db.Column(db.String(80))
+    desc = db.Column(db.Text)
     events = db.relationship('Event', backref='owner')
-    admin_id = db.Column(db.Integer, db.ForeignKey('user.id'))
 
 
 class Event(db.Model):
@@ -74,19 +83,6 @@ def load_user(user_id):
     return User.query.get(int(user_id))
 
 
-def login_required(role="ANY"):
-    def wrapper(fn):
-        @wraps(fn)
-        def decorated_view(*args, **kwargs):
-            if not current_user.is_authenticated:
-                return login_manager.unauthorized()
-            if ((current_user.urole != role) and (role != "ANY")):
-                return login_manager.unauthorized()
-            return fn(*args, **kwargs)
-        return decorated_view
-    return wrapper
-
-
 class LoginForm(FlaskForm):
     username = StringField('Username', validators=[
         InputRequired(), Length(min=4, max=15)])
@@ -103,7 +99,7 @@ class RegisterForm(FlaskForm):
     password = PasswordField('Password', validators=[
         InputRequired(), Length(min=8, max=80)])
     password2 = PasswordField('Confirm Password', validators=[InputRequired(),
-        EqualTo('password', message='Must be equal to above Password')])
+                                                              EqualTo('password', message='Must be equal to above Password')])
 
     def validate_username(self, username):
         user = User.query.filter_by(username=username.data).first()
@@ -116,24 +112,15 @@ class RegisterForm(FlaskForm):
             raise ValidationError('Please use a different email address.')
 
 
-class AddGroupForm(FlaskForm):
+class CreateGroupForm(FlaskForm):
     name = StringField('Name', validators=[
         InputRequired(), Length(min=4, max=50)])
     about = StringField('About', validators=[InputRequired(), Length(min=4)])
-    descript = StringField('Description', validators=[])
-    email = StringField('Email', validators=[InputRequired(),
-        Email(message='Invalid email'), Length(max=50)])
+    descript = TextAreaField('Description', validators=[])
     username = StringField('Username', validators=[
         InputRequired(), Length(min=4, max=15)])
     password = PasswordField('Password', validators=[
         InputRequired(), Length(min=8, max=80)])
-    password2 = PasswordField('Confirm Password', validators=[InputRequired(),
-        EqualTo('password', message='Must be equal to above Password')])
-
-    def validate_username(self, username):
-        user = User.query.filter_by(username=username.data).first()
-        if user is not None:
-            raise ValidationError('Please use a different username.')
 
     def validate_name(self, name):
         group = Group.query.filter_by(name=name.data).first()
@@ -160,17 +147,31 @@ def index():
 
 @app.route('/addgroup', methods=['GET', 'POST'], endpoint='addgroup')
 def addgroup():
-    form = AddGroupForm()
+    form = CreateGroupForm()
+    if form.validate_on_submit():
+        user = User.query.filter_by(username=form.username.data).first()
+        if user:
+            if check_password_hash(user.password, form.password.data):
+                new_group = Group(name=form.name.data, about=form.about.data,
+                                  desc=form.descript.data)
+                user.groups_under.append(new_group)
+                db.session.add(new_group)
+                db.session.add(user)
+                db.session.commit()
+                flash('A New Group has been Made', 'success')
+                return redirect(url_for('login'))
+        flash("Invalid username or Password", 'error')
+    return render_template('group_signup.html', form=form)
+
     if form.validate_on_submit():
         hashed_password = generate_password_hash(
             form.password.data, method='sha256')
         new_user = User(username=form.username.data, email=form.email.data,
-                        password=hashed_password, urole='Admin')
+                        password=hashed_password)
         db.session.add(new_user)
         db.session.commit()
         new_group = Group(name=form.name.data, about=form.about.data,
-                          desc=form.descript.data, admin_id=new_user.id)
-        new_user.group_under = new_group
+                          desc=form.descript.data)
         db.session.add(new_group)
         db.session.commit()
         flash('A New Group has been Made', 'success')
@@ -180,16 +181,16 @@ def addgroup():
 
 
 @app.route('/group-home', endpoint='home')
-@login_required(role="Admin")
+@login_required
 def home():
-    print(current_user.group_under.name)
-    return render_template('group-home.html', group=current_user.group_under)
+    print(current_user.groups_under.name)
+    return render_template('group-home.html', group=current_user.groups_under)
 
 
 @app.route('/group-events', endpoint='events')
-@login_required(role="Admin")
+@login_required
 def events():
-    group = current_user.group_under
+    group = current_user.aell_groups_under
     print(datetime.datetime.now().date())
     all_events = Event.query.filter_by(
         owner_id=group.id, date=datetime.datetime.now().date()).all()
@@ -198,7 +199,7 @@ def events():
 
 
 @app.route('/addevent', methods=['GET', 'POST'])
-@login_required(role="Admin")
+@login_required
 def addevent():
     form = AddEventForm()
 
@@ -208,9 +209,9 @@ def addevent():
                           start_time=form.start_time.data,
                           end_time=form.end_time.data,
                           about=form.about.data,
-                          owner_id=current_user.group_under.id,
+                          owner_id=current_user.groups_under.id,
                           freq=form.freq.data
-                         )
+                          )
         print(new_event.date)
         db.session.add(new_event)
         db.session.commit()
@@ -229,8 +230,6 @@ def login():
             if check_password_hash(user.password, form.password.data):
                 login_user(user, remember=form.remember.data)
                 flash("Successfully Logged In", 'success')
-                if current_user.urole == "Admin":
-                    return redirect(url_for('home'))
                 return redirect(url_for('dashboard'))
         flash("Invalid username or Password", 'error')
         return redirect(url_for('login'))
@@ -243,7 +242,8 @@ def signup():
     if form.validate_on_submit():
         hashed_password = generate_password_hash(
             form.password.data, method='sha256')
-        new_user = User(username=form.username.data, email=form.email.data, password=hashed_password)
+        new_user = User(username=form.username.data,
+                        email=form.email.data, password=hashed_password)
         db.session.add(new_user)
         db.session.commit()
         flash('Succesfully Registered', 'success')
@@ -252,7 +252,7 @@ def signup():
 
 
 @app.route('/calendar', endpoint='calendar', methods=["GET", "POST"])
-@login_required(role="User")
+@login_required
 def calendar():
     print(request.__dict__.keys())
     if request.method == "POST":
@@ -260,24 +260,30 @@ def calendar():
     else:
         date_clk = datetime.datetime.now().date()
     print(type(date_clk))
-    new_date = datetime.datetime.strptime(str(date_clk).strip('"'), '%Y-%m-%d').date()
+    new_date = datetime.datetime.strptime(
+        str(date_clk).strip('"'), '%Y-%m-%d').date()
     all_groups = current_user.groups
     all_events = []
     for ev in all_groups:
         print(ev.name)
-        all_events += Event.query.filter_by(owner_id=ev.id, date=date_clk).all()
+        all_events += Event.query.filter_by(owner_id=ev.id,
+                                            date=date_clk).all()
     print(all_events)
     return render_template('calendar.html', events=all_events)
 
 
 @app.route('/dashboard', endpoint='dashboard')
-@login_required(role="User")
+@login_required
 def dashboard():
-    return render_template('dashboard.html', login_user=current_user)
+    all_groups = current_user.groups
+    all_events = []
+    for ev in all_groups:
+        all_events += Event.query.filter_by(owner_id=ev.id).all()
+    return render_template('dashboard.html', events=all_events, login_user=current_user)
 
 
 @app.route('/change', methods=['GET', 'POST'], endpoint='select')
-@login_required(role="User")
+@login_required
 def select():
     all_groups = Group.query.all()
     if request.method == 'POST':
@@ -297,7 +303,7 @@ def select():
 
 
 @app.route('/logout', endpoint='logout')
-@login_required()
+@login_required
 def logout():
     logout_user()
     flash('Successfully Logged Out', 'success')

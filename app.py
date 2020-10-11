@@ -1,6 +1,5 @@
 import datetime
 import os
-from functools import wraps
 
 from flask import Flask, flash, redirect, render_template, request, url_for
 from flask_bootstrap import Bootstrap
@@ -9,7 +8,6 @@ from flask_login import (
     logout_user)
 from flask_sqlalchemy import SQLAlchemy
 from flask_wtf import FlaskForm
-from itsdangerous import TimedJSONWebSignatureSerializer as Serializer
 from werkzeug.security import check_password_hash, generate_password_hash
 from wtforms import (BooleanField, PasswordField, SelectField, StringField,
                      TextAreaField)
@@ -30,7 +28,6 @@ db = SQLAlchemy(app)
 login_manager = LoginManager()
 bootstrap = Bootstrap(app)
 login_manager.init_app(app)
-#  login_manager.login_view = 'login'
 
 
 groups = db.Table('groups',
@@ -49,6 +46,7 @@ admins = db.Table('admins',
 
 
 class User(db.Model, UserMixin):
+    """ User Model in the database """
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(15), unique=True)
     email = db.Column(db.String(50), unique=True)
@@ -60,6 +58,7 @@ class User(db.Model, UserMixin):
 
 
 class Group(db.Model):
+    """ Group Model in the Database"""
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(40), unique=True, nullable=False)
     about = db.Column(db.String(80), nullable=False)
@@ -68,6 +67,7 @@ class Group(db.Model):
 
 
 class Event(db.Model):
+    """ Event Model in the Database"""
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(20))
     date = db.Column(db.Date, nullable=False)
@@ -91,6 +91,18 @@ class LoginForm(FlaskForm):
     remember = BooleanField('Remember Me')
 
 
+def validate_username(username):
+    user = User.query.filter_by(username=username.data).first()
+    if user is not None:
+        raise ValidationError('Please use a different username.')
+
+
+def validate_email(email):
+    user = User.query.filter_by(email=email.data).first()
+    if user is not None:
+        raise ValidationError('Please use a different email address.')
+
+
 class RegisterForm(FlaskForm):
     email = StringField('Email', validators=[InputRequired(), Email(
         message='Invalid email'), Length(max=50)])
@@ -99,42 +111,34 @@ class RegisterForm(FlaskForm):
     password = PasswordField('Password', validators=[
         InputRequired(), Length(min=8, max=80)])
     password2 = PasswordField('Confirm Password', validators=[InputRequired(),
-                                                              EqualTo('password', message='Must be equal to above Password')])
+                                                              EqualTo('password',
+                                                                      message='Must be equal to above Password')])
 
-    def validate_username(self, username):
-        user = User.query.filter_by(username=username.data).first()
-        if user is not None:
-            raise ValidationError('Please use a different username.')
 
-    def validate_email(self, email):
-        user = User.query.filter_by(email=email.data).first()
-        if user is not None:
-            raise ValidationError('Please use a different email address.')
+def validate_name(name):
+    group = Group.query.filter_by(name=name.data).first()
+    if group is not None:
+        raise ValidationError('Please use a different Group Name.')
 
 
 class CreateGroupForm(FlaskForm):
     name = StringField('Name', validators=[
         InputRequired(), Length(min=4, max=50)])
     about = StringField('About', validators=[InputRequired(), Length(min=4)])
-    descript = TextAreaField('Description', validators=[])
+    description = TextAreaField('Description', validators=[])
     username = StringField('Username', validators=[
         InputRequired(), Length(min=4, max=15)])
     password = PasswordField('Password', validators=[
         InputRequired(), Length(min=8, max=80)])
 
-    def validate_name(self, name):
-        group = Group.query.filter_by(name=name.data).first()
-        if group is not None:
-            raise ValidationError('Please use a different Group Name.')
-
 
 class AddEventForm(FlaskForm):
     name = StringField('Event Name', validators=[InputRequired()])
     date = DateField('Event Date', validators=[InputRequired()])
-    start_time = TimeField('Starting Time', validators=[InputRequired()], render_kw={
-        "placeholder": "(example- 17:00)"})
-    end_time = TimeField('Ending Time', validators=[InputRequired()], render_kw={
-        "placeholder": "(example- 21:00)"})
+    start_time = TimeField('Starting Time', validators=[InputRequired()],
+                           render_kw={"placeholder": "(example- 17:00)"})
+    end_time = TimeField('Ending Time', validators=[InputRequired()],
+                         render_kw={"placeholder": "(example- 21:00)"})
     about = TextAreaField('Short Description about the Event')
     freq = SelectField('Repeat', choices=[('1', "Once"), ('2', "Daily"), (
         '3', "Weekly"), ('4', "Monthly")], validators=[InputRequired()])
@@ -153,7 +157,7 @@ def addgroup():
         if user:
             if check_password_hash(user.password, form.password.data):
                 new_group = Group(name=form.name.data, about=form.about.data,
-                                  desc=form.descript.data)
+                                  desc=form.description.data)
                 user.groups_under.append(new_group)
                 db.session.add(new_group)
                 db.session.add(user)
@@ -161,22 +165,6 @@ def addgroup():
                 flash('A New Group has been Made', 'success')
                 return redirect(url_for('login'))
         flash("Invalid username or Password", 'error')
-    return render_template('group_signup.html', form=form)
-
-    if form.validate_on_submit():
-        hashed_password = generate_password_hash(
-            form.password.data, method='sha256')
-        new_user = User(username=form.username.data, email=form.email.data,
-                        password=hashed_password)
-        db.session.add(new_user)
-        db.session.commit()
-        new_group = Group(name=form.name.data, about=form.about.data,
-                          desc=form.descript.data)
-        db.session.add(new_group)
-        db.session.commit()
-        flash('A New Group has been Made', 'success')
-        return redirect(url_for('login'))
-
     return render_template('group_signup.html', form=form)
 
 
@@ -279,7 +267,9 @@ def dashboard():
     all_events = []
     for ev in all_groups:
         all_events += Event.query.filter_by(owner_id=ev.id).all()
-    return render_template('dashboard.html', events=all_events, login_user=current_user)
+    return render_template('dashboard.html', events=all_events,
+
+                           login_user=current_user)
 
 
 @app.route('/change', methods=['GET', 'POST'], endpoint='select')
